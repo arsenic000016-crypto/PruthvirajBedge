@@ -1,71 +1,1473 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin</title>
+
 <style>
-:root{--ink:#efece6;--mut:#8b8a87;--line:rgba(255,255,255,.12)}*{box-sizing:border-box}
-body{margin:0;background:#050505;color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px}
-a{color:var(--mut)}.ad{max-width:880px;margin:0 auto}h1{font-size:28px;letter-spacing:-.03em;margin:0}.meta{color:var(--mut);font-size:12px}
-.top{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}.tabs{display:flex;gap:6px;margin:18px 0;flex-wrap:wrap}
-button{font:inherit;color:inherit;border:1px solid var(--line);border-radius:10px;padding:8px 14px;background:#0f0f10;cursor:pointer}button:hover,.on{background:#1c1c1e;border-color:rgba(255,255,255,.3)}
-.c{border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;background:#0b0b0c;display:grid;gap:10px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.ac{display:flex;gap:6px}
-label{display:grid;gap:4px;color:var(--mut);font-size:12px}input:not([type]),input[type=email],input[type=password],textarea{background:#000;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--ink);font:inherit;width:100%}
-label.sw,label.fu{display:flex;gap:8px;align-items:center;color:var(--ink);flex-wrap:wrap}.fu input{font-size:12px;color:var(--mut)}.box{max-width:360px;margin:12vh auto;display:grid;gap:12px}
-</style></head><body><div id="app"></div>
+:root{
+  --ink:#efece6;
+  --mut:#8b8a87;
+  --line:rgba(255,255,255,.12)
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#050505;
+  color:var(--ink);
+  font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+  padding:24px
+}
+
+a{color:var(--mut)}
+
+.ad{
+  max-width:880px;
+  margin:0 auto
+}
+
+h1{
+  font-size:28px;
+  letter-spacing:-.03em;
+  margin:0
+}
+
+.meta{
+  color:var(--mut);
+  font-size:12px
+}
+
+.top{
+  display:flex;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap
+}
+
+.tabs{
+  display:flex;
+  gap:6px;
+  margin:18px 0;
+  flex-wrap:wrap
+}
+
+button{
+  font:inherit;
+  color:inherit;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:8px 14px;
+  background:#0f0f10;
+  cursor:pointer
+}
+
+button:hover,.on{
+  background:#1c1c1e;
+  border-color:rgba(255,255,255,.3)
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed
+}
+
+.c{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  margin:12px 0;
+  background:#0b0b0c;
+  display:grid;
+  gap:10px
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px
+}
+
+.ac{
+  display:flex;
+  gap:6px
+}
+
+label{
+  display:grid;
+  gap:4px;
+  color:var(--mut);
+  font-size:12px
+}
+
+input:not([type]),
+input[type=email],
+input[type=password],
+input[type=text],
+textarea{
+  background:#000;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px;
+  color:var(--ink);
+  font:inherit;
+  width:100%
+}
+
+input:focus,
+textarea:focus{
+  outline:none;
+  border-color:rgba(255,255,255,.35)
+}
+
+label.sw,
+label.fu{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  color:var(--ink);
+  flex-wrap:wrap
+}
+
+.fu input{
+  font-size:12px;
+  color:var(--mut)
+}
+
+.box{
+  max-width:360px;
+  margin:12vh auto;
+  display:grid;
+  gap:12px
+}
+
+.password-wrap{
+  position:relative
+}
+
+.password-wrap input{
+  padding-right:75px
+}
+
+.password-toggle{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  padding:6px 9px;
+  font-size:12px
+}
+
+.login-error{
+  min-height:18px
+}
+</style>
+</head>
+
+<body>
+
+<div id="app"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4/dist/tus.min.js"></script>
 <script src="config.js"></script>
+
 <script>
-const C=SITE_CONFIG,sb=supabase.createClient(C.url,C.key),app=document.getElementById('app'),$=s=>document.querySelector(s);
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const pub=p=>p?sb.storage.from(C.bucket).getPublicUrl(p).data.publicUrl:'';
-let tab='projects',msg='',D={projects:[],sections:[],skills:[],set:{id:1}};
-const say=m=>{msg=m;const s=$('#st');if(s)s.textContent=m};
-function loginView(err){app.innerHTML=`<div class="box"><h1>Admin sign in</h1><input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Password" autocomplete="current-password"><button id="go">Sign in</button><span class="meta">${esc(err||'')}</span></div>`;
- const go=async()=>{const {error}=await sb.auth.signInWithPassword({email:$('#em').value,password:$('#pw').value});error?loginView(error.message):init()};$('#go').onclick=go;$('#pw').onkeydown=e=>e.key=='Enter'&&go()}
-async function init(){const {data:{session}}=await sb.auth.getSession();if(!session)return loginView();
- const {data}=await sb.from('admins').select('user_id');
- if(!data||!data.length){await sb.auth.signOut();return loginView('This account is not an admin.')}
- await load();paint()}
-async function load(){const q=t=>sb.from(t).select('*').order('position');const [p,s,k,t]=await Promise.all([q('projects'),q('sections'),q('skills'),sb.from('site_settings').select('*').eq('id',1).maybeSingle()]);
- D={projects:p.data||[],sections:s.data||[],skills:k.data||[],set:t.data||{id:1,logo_tint:true}}}
-const A=(t,id,f,l,v)=>`<label>${l}<input data-t="${t}" data-id="${id}" data-f="${f}" value="${esc(v)}"></label>`;
-const T=(t,id,f,l,v)=>`<label>${l}<textarea rows="2" data-t="${t}" data-id="${id}" data-f="${f}">${esc(v)}</textarea></label>`;
-const K=(t,id,f,l,v)=>`<label class="sw"><input type="checkbox" data-t="${t}" data-id="${id}" data-f="${f}" ${v?'checked':''}> ${l}</label>`;
-const F=(t,id,f,l,v,a)=>`<label class="fu">${l}: ${v?`<a href="${pub(v)}" target="_blank">✓ uploaded</a>`:'none'} <input type="file" accept="${a}" data-up="1" data-t="${t}" data-id="${id}" data-f="${f}"></label>`;
-const M=(t,i,del=1)=>`<span class="ac"><button data-m="-1" data-t="${t}" data-i="${i}">↑</button><button data-m="1" data-t="${t}" data-i="${i}">↓</button>${del?`<button data-del="1" data-t="${t}" data-i="${i}">Delete</button>`:''}</span>`;
+
+const C=SITE_CONFIG;
+
+const sb=supabase.createClient(C.url,C.key);
+
+const app=document.getElementById('app');
+
+const $=s=>document.querySelector(s);
+
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({
+  '&':'&amp;',
+  '<':'&lt;',
+  '>':'&gt;',
+  '"':'&quot;'
+}[c]));
+
+const pub=p=>
+  p
+  ?sb.storage.from(C.bucket).getPublicUrl(p).data.publicUrl
+  :'';
+
+let tab='projects';
+
+let msg='';
+
+let D={
+  projects:[],
+  sections:[],
+  skills:[],
+  set:{id:1}
+};
+
+const say=m=>{
+  msg=m;
+
+  const s=$('#st');
+
+  if(s)s.textContent=m;
+};
+
+
+/* =========================
+   LOGIN
+========================= */
+
+function loginView(err){
+
+  app.innerHTML=`
+
+    <div class="box">
+
+      <h1>Admin sign in</h1>
+
+      <input
+        id="em"
+        type="email"
+        placeholder="Email"
+        autocomplete="username"
+        autocapitalize="none"
+        spellcheck="false"
+      >
+
+      <div class="password-wrap">
+
+        <input
+          id="pw"
+          type="text"
+          placeholder="Password"
+          autocomplete="current-password"
+          autocapitalize="none"
+          spellcheck="false"
+        >
+
+        <button
+          type="button"
+          class="password-toggle"
+          id="togglePw"
+        >Hide</button>
+
+      </div>
+
+      <button
+        id="go"
+        type="button"
+      >Sign in</button>
+
+      <span
+        class="meta login-error"
+        id="loginError"
+      >${esc(err||'')}</span>
+
+    </div>
+  `;
+
+  const email=$('#em');
+
+  const password=$('#pw');
+
+  const button=$('#go');
+
+  const errorBox=$('#loginError');
+
+  const toggle=$('#togglePw');
+
+
+  toggle.onclick=()=>{
+
+    if(password.type==='text'){
+
+      password.type='password';
+
+      toggle.textContent='Show';
+
+    }else{
+
+      password.type='text';
+
+      toggle.textContent='Hide';
+
+    }
+
+    password.focus();
+
+  };
+
+
+  const go=async()=>{
+
+    const em=email.value.trim();
+
+    const pw=password.value;
+
+
+    if(!em||!pw){
+
+      errorBox.textContent=
+        'Enter your email and password.';
+
+      return;
+
+    }
+
+
+    button.disabled=true;
+
+    button.textContent='Signing in…';
+
+    errorBox.textContent='';
+
+
+    try{
+
+      const {error}=
+        await sb.auth.signInWithPassword({
+          email:em,
+          password:pw
+        });
+
+
+      if(error){
+
+        button.disabled=false;
+
+        button.textContent='Sign in';
+
+        errorBox.textContent=
+          error.message;
+
+        return;
+
+      }
+
+
+      await init();
+
+    }catch(x){
+
+      button.disabled=false;
+
+      button.textContent='Sign in';
+
+      errorBox.textContent=
+        x?.message||String(x);
+
+    }
+
+  };
+
+
+  button.onclick=go;
+
+
+  password.onkeydown=e=>{
+
+    if(e.key==='Enter')go();
+
+  };
+
+
+  email.focus();
+
+}
+
+
+/* =========================
+   INITIALIZE
+========================= */
+
+async function init(){
+
+  const {
+    data:{session}
+  }=await sb.auth.getSession();
+
+
+  if(!session){
+
+    loginView();
+
+    return;
+
+  }
+
+
+  const {
+    data,
+    error
+  }=
+    await sb
+      .from('admins')
+      .select('user_id');
+
+
+  if(error){
+
+    await sb.auth.signOut();
+
+    return loginView(
+      'Admin check failed: '+error.message
+    );
+
+  }
+
+
+  if(!data||!data.length){
+
+    await sb.auth.signOut();
+
+    return loginView(
+      'This account is not an admin.'
+    );
+
+  }
+
+
+  await load();
+
+  paint();
+
+}
+
+
+/* =========================
+   LOAD DATA
+========================= */
+
+async function load(){
+
+  const q=t=>
+    sb
+      .from(t)
+      .select('*')
+      .order('position');
+
+
+  const [
+    p,
+    s,
+    k,
+    t
+  ]=await Promise.all([
+
+    q('projects'),
+
+    q('sections'),
+
+    q('skills'),
+
+    sb
+      .from('site_settings')
+      .select('*')
+      .eq('id',1)
+      .maybeSingle()
+
+  ]);
+
+
+  D={
+
+    projects:p.data||[],
+
+    sections:s.data||[],
+
+    skills:k.data||[],
+
+    set:t.data||{
+      id:1,
+      logo_tint:true
+    }
+
+  };
+
+}
+
+
+/* =========================
+   FORM HELPERS
+========================= */
+
+const A=(t,id,f,l,v)=>`
+
+<label>
+
+${l}
+
+<input
+  data-t="${t}"
+  data-id="${id}"
+  data-f="${f}"
+  value="${esc(v)}"
+>
+
+</label>
+
+`;
+
+
+const T=(t,id,f,l,v)=>`
+
+<label>
+
+${l}
+
+<textarea
+  rows="2"
+  data-t="${t}"
+  data-id="${id}"
+  data-f="${f}"
+>${esc(v)}</textarea>
+
+</label>
+
+`;
+
+
+const K=(t,id,f,l,v)=>`
+
+<label class="sw">
+
+<input
+  type="checkbox"
+  data-t="${t}"
+  data-id="${id}"
+  data-f="${f}"
+  ${v?'checked':''}
+>
+
+${l}
+
+</label>
+
+`;
+
+
+const F=(t,id,f,l,v,a)=>`
+
+<label class="fu">
+
+${l}:
+
+${
+  v
+  ? `<a href="${pub(v)}" target="_blank">✓ uploaded</a>`
+  : 'none'
+}
+
+<input
+  type="file"
+  accept="${a}"
+  data-up="1"
+  data-t="${t}"
+  data-id="${id}"
+  data-f="${f}"
+>
+
+</label>
+
+`;
+
+
+const M=(t,i,del=1)=>`
+
+<span class="ac">
+
+<button
+  data-m="-1"
+  data-t="${t}"
+  data-i="${i}"
+>
+↑
+</button>
+
+<button
+  data-m="1"
+  data-t="${t}"
+  data-i="${i}"
+>
+↓
+</button>
+
+${
+  del
+  ? `<button
+       data-del="1"
+       data-t="${t}"
+       data-i="${i}"
+     >Delete</button>`
+  : ''
+}
+
+</span>
+
+`;
+
+
+/* =========================
+   PAINT ADMIN PANEL
+========================= */
+
 function paint(){
- let h=`<div class="ad"><div class="top"><h1>Admin</h1><span class="meta" id="st">${esc(msg)}</span><span><a href="/" target="_blank">View site</a> · <button data-out="1">Sign out</button></span></div><div class="tabs">${['projects','sections','skills','logo'].map(t=>`<button data-tab="${t}" class="${t==tab?'on':''}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>`;
- if(tab=='projects')h+=D.projects.map((p,i)=>{const t='projects',d=p.id;return `<div class="c"><div class="row"><b>${esc(p.title)}</b>${M(t,i)}</div>${A(t,d,'title','Title',p.title)}${A(t,d,'category','Category',p.category)}${T(t,d,'description','Description',p.description)}${A(t,d,'role','Role',p.role)}${A(t,d,'tools','Tools used',p.tools)}${T(t,d,'process','Process',p.process)}${T(t,d,'result','Result',p.result)}${F(t,d,'thumb_path','Thumbnail',p.thumb_path,'image/*')}${F(t,d,'video_path',`Video (MP4/WebM, up to ${C.maxMB} MB, resumable)`,p.video_path,'video/*')}${A(t,d,'video_url','Or a YouTube / Vimeo link (used if no video is uploaded)',p.video_url)}<div class="row" style="justify-content:flex-start;gap:24px">${K(t,d,'featured','Featured',p.featured)}${K(t,d,'visible','Visible',p.visible)}</div></div>`}).join('')+'<button data-add="projects">+ Add project</button>';
- if(tab=='sections')h+=D.sections.map((s,i)=>`<div class="c row"><b>${esc(s.label)}</b>${K('sections',s.id,'enabled','Show on site',s.enabled)}${M('sections',i,0)}</div>`).join('');
- if(tab=='skills')h+=D.skills.map((s,i)=>{const t='skills',d=s.id;return `<div class="c"><div class="row"><b>${esc(s.name)}</b>${M(t,i)}</div>${A(t,d,'name','Name',s.name)}${A(t,d,'icon_text','Icon text (1–2 letters), used if no icon image',s.icon_text)}${A(t,d,'description','Description (optional)',s.description)}${F(t,d,'icon_path','Icon image (SVG/PNG)',s.icon_path,'image/*')}${K(t,d,'visible','Visible',s.visible)}</div>`}).join('')+'<button data-add="skills">+ Add skill</button>';
- if(tab=='logo')h+=`<div class="c">${F('site_settings',1,'logo_path','Logo (transparent SVG or PNG)',D.set.logo_path,'image/*')}${K('site_settings',1,'logo_tint','Tint off-white (monochrome)',D.set.logo_tint!==false)}</div>`;
- app.innerHTML=h+'</div>'}
-const rowOf=(t,id)=>t=='site_settings'?D.set:D[t].find(r=>r.id==id);
-async function upd(t,id,patch){const {error}=await sb.from(t).update(patch).eq('id',id);say(error?'Error: '+error.message:'Saved');if(!error)Object.assign(rowOf(t,id),patch);return !error}
-function upload(file,path){return new Promise(async(res,rej)=>{
- if(file.size<=6*1048576){const {error}=await sb.storage.from(C.bucket).upload(path,file,{contentType:file.type,cacheControl:'31536000',upsert:true});return error?rej(error):res()}
- const ref=new URL(C.url).hostname.split('.')[0];
- const u=new tus.Upload(file,{endpoint:`https://${ref}.storage.supabase.co/storage/v1/upload/resumable`,retryDelays:[0,3000,5000,10000,20000],
-  headers:{apikey:C.key,'x-upsert':'true'},chunkSize:6*1048576,uploadDataDuringCreation:true,removeFingerprintOnSuccess:true,
-  metadata:{bucketName:C.bucket,objectName:path,contentType:file.type,cacheControl:'31536000'},
-  onBeforeRequest:async r=>{const {data:{session}}=await sb.auth.getSession();r.setHeader('authorization','Bearer '+session.access_token)},
-  onProgress:(a,b)=>say(`Uploading ${Math.round(a/b*100)}%`),onError:rej,onSuccess:res});
- u.findPreviousUploads().then(p=>{if(p.length)u.resumeFromPreviousUpload(p[0]);u.start()})})}
-async function doUp(inp){const f=inp.files[0];if(!f)return;const d=inp.dataset;
- if(f.size>C.maxMB*1048576)return say(`That file is ${Math.round(f.size/1048576)} MB and the limit is ${C.maxMB} MB. Compress it, upgrade Supabase, or paste a YouTube/Vimeo link.`);
- const ext=(f.name.split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,''),dir=d.t=='site_settings'?'site':`${d.t}/${d.id}`;
- const path=`${dir}/${d.f.replace('_path','')}-${f.lastModified}-${f.size}.${ext}`,old=rowOf(d.t,d.id)[d.f];
- try{say('Uploading…');await upload(f,path);if(await upd(d.t,d.id,{[d.f]:path})){if(old&&old!==path)await sb.storage.from(C.bucket).remove([old]);say('Uploaded')}paint()}catch(x){say('Upload failed: '+(x.message||x))}}
-app.addEventListener('change',async e=>{const d=e.target.dataset;if(d.up)return doUp(e.target);if(!d.f)return;
- const v=e.target.type=='checkbox'?e.target.checked:e.target.value;
- if(d.f=='featured'&&v)await sb.from('projects').update({featured:false}).eq('featured',true);
- await upd(d.t,d.id,{[d.f]:v});if(d.f=='featured')await load()});
-app.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
- if(d.out){await sb.auth.signOut();return loginView()}
- if(d.tab){tab=d.tab;return paint()}
- if(d.add){const L=D[d.add],pos=L.length?Math.max(...L.map(r=>r.position))+1:0;const {error}=await sb.from(d.add).insert({position:pos});say(error?'Error: '+error.message:'Added');await load();return paint()}
- if(d.m){const L=D[d.t],i=+d.i,j=i+ +d.m;if(j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]];
-  await Promise.all(L.map((r,n)=>r.position!==n?(r.position=n,sb.from(d.t).update({position:n}).eq('id',r.id)):null).filter(Boolean));say('Saved');return paint()}
- if(d.del){const r=D[d.t][+d.i];if(!confirm('Delete permanently, including its uploaded files?'))return;
-  const files=[r.thumb_path,r.video_path,r.icon_path].filter(Boolean);if(files.length)await sb.storage.from(C.bucket).remove(files);
-  const {error}=await sb.from(d.t).delete().eq('id',r.id);say(error?'Error: '+error.message:'Deleted');await load();paint()}});
+
+  let h=`
+
+  <div class="ad">
+
+    <div class="top">
+
+      <h1>Admin</h1>
+
+      <span
+        class="meta"
+        id="st"
+      >${esc(msg)}</span>
+
+      <span>
+
+        <a
+          href="/"
+          target="_blank"
+        >View site</a>
+
+        ·
+
+        <button
+          data-out="1"
+          type="button"
+        >
+          Sign out
+        </button>
+
+      </span>
+
+    </div>
+
+
+    <div class="tabs">
+
+      ${
+        ['projects','sections','skills','logo']
+        .map(t=>`
+
+          <button
+            type="button"
+            data-tab="${t}"
+            class="${t==tab?'on':''}"
+          >
+
+            ${
+              t[0].toUpperCase()
+              +t.slice(1)
+            }
+
+          </button>
+
+        `)
+        .join('')
+      }
+
+    </div>
+
+  `;
+
+
+  /* PROJECTS */
+
+  if(tab=='projects')
+
+    h+=D.projects.map((p,i)=>{
+
+      const t='projects';
+
+      const d=p.id;
+
+
+      return `
+
+      <div class="c">
+
+        <div class="row">
+
+          <b>${esc(p.title)}</b>
+
+          ${M(t,i)}
+
+        </div>
+
+
+        ${A(
+          t,
+          d,
+          'title',
+          'Title',
+          p.title
+        )}
+
+
+        ${A(
+          t,
+          d,
+          'category',
+          'Category',
+          p.category
+        )}
+
+
+        ${T(
+          t,
+          d,
+          'description',
+          'Description',
+          p.description
+        )}
+
+
+        ${A(
+          t,
+          d,
+          'role',
+          'Role',
+          p.role
+        )}
+
+
+        ${A(
+          t,
+          d,
+          'tools',
+          'Tools used',
+          p.tools
+        )}
+
+
+        ${T(
+          t,
+          d,
+          'process',
+          'Process',
+          p.process
+        )}
+
+
+        ${T(
+          t,
+          d,
+          'result',
+          'Result',
+          p.result
+        )}
+
+
+        ${F(
+          t,
+          d,
+          'thumb_path',
+          'Thumbnail',
+          p.thumb_path,
+          'image/*'
+        )}
+
+
+        ${F(
+          t,
+          d,
+          'video_path',
+          `Video (MP4/WebM, up to ${C.maxMB} MB, resumable)`,
+          p.video_path,
+          'video/*'
+        )}
+
+
+        ${A(
+          t,
+          d,
+          'video_url',
+          'Or a YouTube / Vimeo link (used if no video is uploaded)',
+          p.video_url
+        )}
+
+
+        <div
+          class="row"
+          style="justify-content:flex-start;gap:24px"
+        >
+
+          ${K(
+            t,
+            d,
+            'featured',
+            'Featured',
+            p.featured
+          )}
+
+          ${K(
+            t,
+            d,
+            'visible',
+            'Visible',
+            p.visible
+          )}
+
+        </div>
+
+      </div>
+
+      `;
+
+    }).join('')
+
+    +`
+
+      <button
+        type="button"
+        data-add="projects"
+      >
+        + Add project
+      </button>
+
+    `;
+
+
+  /* SECTIONS */
+
+  if(tab=='sections')
+
+    h+=D.sections.map((s,i)=>`
+
+      <div class="c row">
+
+        <b>${esc(s.label)}</b>
+
+        ${K(
+          'sections',
+          s.id,
+          'enabled',
+          'Show on site',
+          s.enabled
+        )}
+
+        ${M(
+          'sections',
+          i,
+          0
+        )}
+
+      </div>
+
+    `).join('');
+
+
+  /* SKILLS */
+
+  if(tab=='skills')
+
+    h+=D.skills.map((s,i)=>{
+
+      const t='skills';
+
+      const d=s.id;
+
+
+      return `
+
+      <div class="c">
+
+        <div class="row">
+
+          <b>${esc(s.name)}</b>
+
+          ${M(t,i)}
+
+        </div>
+
+
+        ${A(
+          t,
+          d,
+          'name',
+          'Name',
+          s.name
+        )}
+
+
+        ${A(
+          t,
+          d,
+          'icon_text',
+          'Icon text (1–2 letters), used if no icon image',
+          s.icon_text
+        )}
+
+
+        ${A(
+          t,
+          d,
+          'description',
+          'Description (optional)',
+          s.description
+        )}
+
+
+        ${F(
+          t,
+          d,
+          'icon_path',
+          'Icon image (SVG/PNG)',
+          s.icon_path,
+          'image/*'
+        )}
+
+
+        ${K(
+          t,
+          d,
+          'visible',
+          'Visible',
+          s.visible
+        )}
+
+      </div>
+
+      `;
+
+    }).join('')
+
+    +`
+
+      <button
+        type="button"
+        data-add="skills"
+      >
+        + Add skill
+      </button>
+
+    `;
+
+
+  /* LOGO */
+
+  if(tab=='logo')
+
+    h+=`
+
+      <div class="c">
+
+        ${F(
+          'site_settings',
+          1,
+          'logo_path',
+          'Logo (transparent SVG or PNG)',
+          D.set.logo_path,
+          'image/*'
+        )}
+
+        ${K(
+          'site_settings',
+          1,
+          'logo_tint',
+          'Tint off-white (monochrome)',
+          D.set.logo_tint!==false
+        )}
+
+      </div>
+
+    `;
+
+
+  app.innerHTML=h+'</div>';
+
+}
+
+
+/* =========================
+   DATABASE UPDATE
+========================= */
+
+const rowOf=(t,id)=>
+  t=='site_settings'
+  ?D.set
+  :D[t].find(r=>r.id==id);
+
+
+async function upd(t,id,patch){
+
+  const {error}=
+    await sb
+      .from(t)
+      .update(patch)
+      .eq('id',id);
+
+
+  say(
+    error
+    ?'Error: '+error.message
+    :'Saved'
+  );
+
+
+  if(!error)
+    Object.assign(
+      rowOf(t,id),
+      patch
+    );
+
+
+  return !error;
+
+}
+
+
+/* =========================
+   UPLOAD
+========================= */
+
+function upload(file,path){
+
+  return new Promise(async(res,rej)=>{
+
+
+    if(file.size<=6*1048576){
+
+      const {error}=
+        await sb
+          .storage
+          .from(C.bucket)
+          .upload(
+            path,
+            file,
+            {
+              contentType:file.type,
+              cacheControl:'31536000',
+              upsert:true
+            }
+          );
+
+
+      return error
+        ?rej(error)
+        :res();
+
+    }
+
+
+    const ref=
+      new URL(C.url)
+        .hostname
+        .split('.')[0];
+
+
+    const u=new tus.Upload(
+      file,
+      {
+
+        endpoint:
+          `https://${ref}.storage.supabase.co/storage/v1/upload/resumable`,
+
+        retryDelays:[
+          0,
+          3000,
+          5000,
+          10000,
+          20000
+        ],
+
+        headers:{
+          apikey:C.key,
+          'x-upsert':'true'
+        },
+
+        chunkSize:
+          6*1048576,
+
+        uploadDataDuringCreation:true,
+
+        removeFingerprintOnSuccess:true,
+
+        metadata:{
+          bucketName:C.bucket,
+          objectName:path,
+          contentType:file.type,
+          cacheControl:'31536000'
+        },
+
+        onBeforeRequest:async r=>{
+
+          const {
+            data:{session}
+          }=
+            await sb.auth.getSession();
+
+          r.setHeader(
+            'authorization',
+            'Bearer '+session.access_token
+          );
+
+        },
+
+        onProgress:(a,b)=>
+          say(
+            `Uploading ${Math.round(a/b*100)}%`
+          ),
+
+        onError:rej,
+
+        onSuccess:res
+
+      }
+    );
+
+
+    u.findPreviousUploads()
+      .then(p=>{
+
+        if(p.length)
+          u.resumeFromPreviousUpload(p[0]);
+
+        u.start();
+
+      });
+
+  });
+
+}
+
+
+/* =========================
+   FILE UPLOAD HANDLER
+========================= */
+
+async function doUp(inp){
+
+  const f=inp.files[0];
+
+  if(!f)return;
+
+
+  const d=inp.dataset;
+
+
+  if(
+    f.size>
+    C.maxMB*1048576
+  )
+
+    return say(
+      `That file is ${Math.round(f.size/1048576)} MB and the limit is ${C.maxMB} MB. Compress it, upgrade Supabase, or paste a YouTube/Vimeo link.`
+    );
+
+
+  const ext=
+    (f.name.split('.').pop()||'bin')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g,'');
+
+
+  const dir=
+    d.t=='site_settings'
+    ?'site'
+    :`${d.t}/${d.id}`;
+
+
+  const path=
+    `${dir}/${d.f.replace('_path','')}-${f.lastModified}-${f.size}.${ext}`;
+
+
+  const old=
+    rowOf(d.t,d.id)[d.f];
+
+
+  try{
+
+    say('Uploading…');
+
+    await upload(f,path);
+
+
+    if(
+      await upd(
+        d.t,
+        d.id,
+        {[d.f]:path}
+      )
+    ){
+
+      if(
+        old&&
+        old!==path
+      )
+
+        await sb
+          .storage
+          .from(C.bucket)
+          .remove([old]);
+
+
+      say('Uploaded');
+
+    }
+
+
+    paint();
+
+
+  }catch(x){
+
+    say(
+      'Upload failed: '+
+      (x.message||x)
+    );
+
+  }
+
+}
+
+
+/* =========================
+   CHANGE EVENTS
+========================= */
+
+app.addEventListener(
+  'change',
+  async e=>{
+
+    const d=e.target.dataset;
+
+
+    if(d.up)
+      return doUp(e.target);
+
+
+    if(!d.f)
+      return;
+
+
+    const v=
+      e.target.type=='checkbox'
+      ?e.target.checked
+      :e.target.value;
+
+
+    if(
+      d.f=='featured'&&
+      v
+    )
+
+      await sb
+        .from('projects')
+        .update({featured:false})
+        .eq('featured',true);
+
+
+    await upd(
+      d.t,
+      d.id,
+      {[d.f]:v}
+    );
+
+
+    if(
+      d.f=='featured'
+    )
+
+      await load();
+
+  }
+);
+
+
+/* =========================
+   BUTTON EVENTS
+========================= */
+
+app.addEventListener(
+  'click',
+  async e=>{
+
+    const b=
+      e.target.closest('button');
+
+
+    if(!b)return;
+
+
+    const d=b.dataset;
+
+
+    if(d.out){
+
+      await sb.auth.signOut();
+
+      return loginView();
+
+    }
+
+
+    if(d.tab){
+
+      tab=d.tab;
+
+      return paint();
+
+    }
+
+
+    if(d.add){
+
+      const L=D[d.add];
+
+      const pos=
+        L.length
+        ?Math.max(
+          ...L.map(r=>r.position)
+        )+1
+        :0;
+
+
+      const {error}=
+        await sb
+          .from(d.add)
+          .insert({
+            position:pos
+          });
+
+
+      say(
+        error
+        ?'Error: '+error.message
+        :'Added'
+      );
+
+
+      await load();
+
+      return paint();
+
+    }
+
+
+    if(d.m){
+
+      const L=D[d.t];
+
+      const i=+d.i;
+
+      const j=i+ +d.m;
+
+
+      if(
+        j<0||
+        j>=L.length
+      )
+        return;
+
+
+      [
+        L[i],
+        L[j]
+      ]=[
+        L[j],
+        L[i]
+      ];
+
+
+      await Promise.all(
+
+        L.map((r,n)=>
+
+          r.position!==n
+
+          ?(
+            r.position=n,
+            sb
+              .from(d.t)
+              .update({position:n})
+              .eq('id',r.id)
+          )
+
+          :null
+
+        ).filter(Boolean)
+
+      );
+
+
+      say('Saved');
+
+      return paint();
+
+    }
+
+
+    if(d.del){
+
+      const r=
+        D[d.t][+d.i];
+
+
+      if(
+        !confirm(
+          'Delete permanently, including its uploaded files?'
+        )
+      )
+        return;
+
+
+      const files=[
+        r.thumb_path,
+        r.video_path,
+        r.icon_path
+      ].filter(Boolean);
+
+
+      if(files.length)
+
+        await sb
+          .storage
+          .from(C.bucket)
+          .remove(files);
+
+
+      const {error}=
+        await sb
+          .from(d.t)
+          .delete()
+          .eq('id',r.id);
+
+
+      say(
+        error
+        ?'Error: '+error.message
+        :'Deleted'
+      );
+
+
+      await load();
+
+      paint();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   START
+========================= */
+
 init();
-</script></body></html>
+
+</script>
+
+</body>
+</html>
